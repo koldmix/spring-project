@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/account_reservation}
+    username: ${DATABASE_USER:postgres}
+    password: ${DATABASE_PASSWORD:admin}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
