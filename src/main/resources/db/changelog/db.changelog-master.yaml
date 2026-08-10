@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/1-create-tables.yaml
+  - include:
+      file: db/changelog/changes/2-add-constraints.yaml
+  - include:
+      file: db/changelog/changes/3-insert-statuses.yaml

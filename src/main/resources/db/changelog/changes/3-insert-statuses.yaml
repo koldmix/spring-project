@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3-load-account-statuses
+      author: mikhail
+      changes:
+        - loadData:
+            tableName: account_status
+            file: db/changelog/data/statuses.csv
+            separator: ","

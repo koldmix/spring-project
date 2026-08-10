@@ -1,0 +1,93 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 1-create-account-status
+      author: mikhail
+      changes:
+        - createTable:
+            tableName: account_status
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 2-create-client
+      author: mikhail
+      changes:
+        - createTable:
+            tableName: client
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: "gen_random_uuid()"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: full_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: citizenship
+                  type: VARCHAR(100)
+              - column:
+                  name: client_type
+                  type: VARCHAR(100)
+              - column:
+                  name: document_number
+                  type: VARCHAR(50)
+              - column:
+                  name: document_series
+                  type: VARCHAR(50)
+              - column:
+                  name: document_type
+                  type: VARCHAR(100)
+              - column:
+                  name: mdm_code
+                  type: BIGINT
+
+  - changeSet:
+      id: 3-create-account
+      author: mikhail
+      changes:
+        - createTable:
+            tableName: account
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: "gen_random_uuid()"
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: status_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: client_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_type
+                  type: VARCHAR(100)
+              - column:
+                  name: currency_code
+                  type: VARCHAR(10)
