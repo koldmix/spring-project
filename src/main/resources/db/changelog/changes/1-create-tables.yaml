@@ -3,6 +3,10 @@ databaseChangeLog:
   - changeSet:
       id: 1-create-account-status
       author: mikhail
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
       changes:
         - createTable:
             tableName: account_status
@@ -22,10 +26,20 @@ databaseChangeLog:
               - column:
                   name: description
                   type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: updated_at
+                  type: timestamp
 
   - changeSet:
       id: 2-create-client
       author: mikhail
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
       changes:
         - createTable:
             tableName: client
@@ -60,10 +74,20 @@ databaseChangeLog:
               - column:
                   name: mdm_code
                   type: BIGINT
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: updated_at
+                  type: timestamp
 
   - changeSet:
       id: 3-create-account
       author: mikhail
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
       changes:
         - createTable:
             tableName: account
@@ -91,3 +115,9 @@ databaseChangeLog:
               - column:
                   name: currency_code
                   type: VARCHAR(10)
+              - column:
+                  name: created_at
+                  type: timestamp
+              - column:
+                  name: updated_at
+                  type: timestamp

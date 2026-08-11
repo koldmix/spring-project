@@ -7,12 +7,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.Objects;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table
 public class Account {
@@ -36,76 +43,12 @@ public class Account {
     @Column(name = "currency_code")
     private String currencyCode;
 
-    public Account(UUID id, AccountStatus statusId, Client clientId, String accountType, String currencyCode) {
-        this.id = id;
-        this.statusId = statusId;
-        this.clientId = clientId;
-        this.accountType = accountType;
-        this.currencyCode = currencyCode;
-    }
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    public Account() {
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public AccountStatus getStatusId() {
-        return statusId;
-    }
-
-    public void setStatusId(AccountStatus statusId) {
-        this.statusId = statusId;
-    }
-
-    public Client getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(Client clientId) {
-        this.clientId = clientId;
-    }
-
-    public String getAccountType() {
-        return accountType;
-    }
-
-    public void setAccountType(String accountType) {
-        this.accountType = accountType;
-    }
-
-    public String getCurrencyCode() {
-        return currencyCode;
-    }
-
-    public void setCurrencyCode(String currencyCode) {
-        this.currencyCode = currencyCode;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Account account)) return false;
-        return id == account.id && statusId == account.statusId && clientId == account.clientId && Objects.equals(accountType, account.accountType) && Objects.equals(currencyCode, account.currencyCode);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, statusId, clientId, accountType, currencyCode);
-    }
-
-    @Override
-    public String toString() {
-        return "Account{" +
-                "id=" + id +
-                ", statusId=" + statusId +
-                ", clientId=" + clientId +
-                ", accountType='" + accountType + '\'' +
-                ", currencyCode='" + currencyCode + '\'' +
-                '}';
-    }
 }
