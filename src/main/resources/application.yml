@@ -22,4 +22,4 @@ management:
     shutdown:
       enabled: false
   server:
-    port: 8081
+    port: ${MANAGEMENT_PORT:8081}
