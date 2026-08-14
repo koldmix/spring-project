@@ -8,3 +8,18 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, loggers
+        exclude: env, shutdown
+  endpoint:
+    health:
+      show-details: always
+      enabled: true
+    shutdown:
+      enabled: false
+  server:
+    port: ${MANAGEMENT_PORT:8081}
