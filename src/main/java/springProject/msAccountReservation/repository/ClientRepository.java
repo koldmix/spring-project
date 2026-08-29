@@ -6,4 +6,5 @@ import springProject.msAccountReservation.entity.Client;
 import java.util.UUID;
 
 public interface ClientRepository extends JpaRepository<Client, UUID> {
+    boolean existsByMdmCode(long mdmCode);
 }

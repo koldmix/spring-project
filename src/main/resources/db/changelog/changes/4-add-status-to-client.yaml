@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5-add-status-to-client
+      author: mikhail
+      changes:
+        - addColumn:
+            tableName: client
+            columns:
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: 'ACTIVE'
+                  constraints:
+                    nullable: false

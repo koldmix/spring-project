@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5-create-client-bill-table
+      author: mikhail
+      changes:
+        - createTable:
+            tableName: client_bill
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: client_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_bill_client
+                    references: client(id)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: 'ACTIVE'
+                  constraints:
+                    nullable: false
