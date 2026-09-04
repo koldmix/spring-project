@@ -20,6 +20,7 @@ import springProject.msAccountReservation.entity.ClientBill;
 import springProject.msAccountReservation.entity.ClientStatus;
 import springProject.msAccountReservation.exception.ClientConflictException;
 import springProject.msAccountReservation.exception.ClientNotFoundException;
+import springProject.msAccountReservation.mapper.ClientMapper;
 import springProject.msAccountReservation.repository.ClientBillRepository;
 import springProject.msAccountReservation.repository.ClientRepository;
 
@@ -29,10 +30,12 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ClientService {
 
     private final ClientRepository clientRepository;
     private final ClientBillRepository clientBillRepository;
+    private final ClientMapper clientMapper;
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
 
 
@@ -44,15 +47,7 @@ public class ClientService {
                     + request.getMdmCode() + " already exists");
         }
 
-
-        Client client = new Client();
-        client.setMdmCode(request.getMdmCode());
-        client.setFullName(request.getFullName());
-        client.setCitizenship(request.getCitizenship());
-        client.setClientType(request.getClientType());
-        client.setDocumentNumber(request.getDocumentNumber());
-        client.setDocumentSeries(request.getDocumentSeries());
-        client.setDocumentType(request.getDocumentType());
+        Client client = clientMapper.toEntityFromCreateRequest(request);
         client.setStatus(ClientStatus.ACTIVE);
 
         Client savedClient = clientRepository.save(client);
@@ -63,7 +58,7 @@ public class ClientService {
 
         clientBillRepository.save(newBill);
 
-        return mapToResponse(savedClient);
+        return clientMapper.toClientResponseFromClient(savedClient);
     }
 
     @Transactional
@@ -73,37 +68,35 @@ public class ClientService {
             throw new ClientNotFoundException("Not Found: Client with ID "
                     + clientId + " does not exist");
         }
-        if (clientBillRepository.existsByClientIdAndStatus(clientId, BillStatus.ACTIVE)){
+        if (clientBillRepository.existsByClientIdAndStatus(clientId, BillStatus.ACTIVE)) {
             logger.warn("Попытка удалить клиента с активными счетами");
             throw new ClientConflictException("У клиента есть активные счета. Удаление запрещено.");
         }
 
-        clientRepository.deleteById(clientId);
+        clientRepository.softDeleteById(clientId);
     }
 
-    @Transactional(readOnly = true)
     public ClientResponse getClient(UUID clientId) {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ClientNotFoundException(" Client with "
                         + clientId + " not found"));
 
-        return mapToResponse(client);
+        return clientMapper.toClientResponseFromClient(client);
     }
 
-    @Transactional(readOnly = true)
     public ClientPageResponse searchClients(Integer page, Integer size, String fullName, Long mdmCode) {
         int pageNumber = (page != null) ? page : 0;
         int pageSize = (size != null) ? size : 20;
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Client> clientPage = clientRepository.findAll(pageable);
-        if (clientPage.isEmpty()) {
-            logger.warn("Страница с клиентами пуста");
-            throw new ClientNotFoundException("No clients matching");
-        }
+//        if (clientPage.isEmpty()) {
+//            logger.warn("Страница с клиентами пуста");
+//            throw new ClientNotFoundException("No clients matching");
+//        }
 
         List<ClientResponse> dtoList = clientPage.getContent().stream()
-                .map(this::mapToResponse)
+                .map(clientMapper::toClientResponseFromClient)
                 .toList();
 
         PageableObject pageableObject = new PageableObject();
@@ -124,16 +117,11 @@ public class ClientService {
                 .orElseThrow(() -> new ClientNotFoundException("Client with ID "
                         + clientId + " not found"));
 
-        client.setFullName(request.getFullName());
-        client.setCitizenship(request.getCitizenship());
-        client.setClientType(request.getClientType());
-        client.setDocumentNumber(request.getDocumentNumber());
-        client.setDocumentSeries(request.getDocumentSeries());
-        client.setDocumentType(request.getDocumentType());
+        clientMapper.updateClientFromRequest(request, client);
 
         Client updatedClient = clientRepository.save(client);
 
-        return mapToResponse(updatedClient);
+        return clientMapper.toClientResponseFromClient(updatedClient);
     }
 
     public ClientExistsResponse checkClientExists(UUID clientId) {
@@ -149,30 +137,4 @@ public class ClientService {
         return response;
     }
 
-
-    private ClientResponse mapToResponse(Client client) {
-        ClientResponse response = new ClientResponse();
-        response.setId(client.getId());
-        response.setMdmCode(client.getMdmCode());
-        response.setFullName(client.getFullName());
-        response.setCitizenship(client.getCitizenship());
-        response.setClientType(client.getClientType());
-        response.setDocumentNumber(client.getDocumentNumber());
-        response.setDocumentSeries(client.getDocumentSeries());
-        response.setDocumentType(client.getDocumentType());
-
-        response.setStatus(springProject.msAccountReservation.dto.ClientStatus
-                .valueOf(client.getStatus().name()));
-
-        if (client.getCreatedAt() != null) {
-            response.setCreatedAt(client.getCreatedAt().atOffset(ZoneOffset.UTC));
-        }
-        if (client.getUpdatedAt() != null) {
-            response.setUpdatedAt(client.getUpdatedAt().atOffset(ZoneOffset.UTC));
-        }
-
-        response.setHasAccounts(false);
-
-        return response;
-    }
 }

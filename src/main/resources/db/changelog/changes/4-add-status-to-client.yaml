@@ -2,6 +2,12 @@ databaseChangeLog:
   - changeSet:
       id: 5-add-status-to-client
       author: mikhail
+      preConditions:
+        - onFail: HALT
+        - not:
+            columnExists:
+              tableName: client
+              columnName: status
       changes:
         - addColumn:
             tableName: client

@@ -2,6 +2,11 @@ databaseChangeLog:
   - changeSet:
       id: 5-create-client-bill-table
       author: mikhail
+      preConditions:
+        - onFail: HALT
+        - not:
+            tableExists:
+              tableName: client_bill
       changes:
         - createTable:
             tableName: client_bill

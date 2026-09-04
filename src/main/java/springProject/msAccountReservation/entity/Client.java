@@ -13,8 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
+
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -25,8 +24,6 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table
-@SQLDelete(sql = "UPDATE client SET status = 'DELETED' WHERE id = ?")
-@SQLRestriction("status <> 'DELETED'")
 public class Client {
     @Id
     @Column(name = "id")
