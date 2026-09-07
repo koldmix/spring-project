@@ -90,10 +90,6 @@ public class ClientService {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Client> clientPage = clientRepository.findAll(pageable);
-//        if (clientPage.isEmpty()) {
-//            logger.warn("Страница с клиентами пуста");
-//            throw new ClientNotFoundException("No clients matching");
-//        }
 
         List<ClientResponse> dtoList = clientPage.getContent().stream()
                 .map(clientMapper::toClientResponseFromClient)

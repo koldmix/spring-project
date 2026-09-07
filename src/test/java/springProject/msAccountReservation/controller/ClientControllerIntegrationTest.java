@@ -1,7 +1,9 @@
 package springProject.msAccountReservation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterEach;
+import com.github.database.rider.core.api.configuration.DBUnit;
+import com.github.database.rider.core.api.dataset.DataSet;
+import com.github.database.rider.junit5.api.DBRider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +11,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import springProject.msAccountReservation.AbstractIntegrationTest;
-import springProject.msAccountReservation.DbCleaner;
 import springProject.msAccountReservation.JsonReaderFromFile;
 import springProject.msAccountReservation.dto.ClientCreateRequest;
 import springProject.msAccountReservation.dto.ClientUpdateRequest;
@@ -27,15 +28,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@DBRider
 @AutoConfigureMockMvc
+@DBUnit(alwaysCleanBefore = true)
 public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ClientRepository clientRepository;
-    @Autowired
-    private DbCleaner cleaner;
     @Autowired
     private ObjectMapper objectMapper;
     private UUID clientId;
@@ -45,41 +46,35 @@ public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
         clientId = UUID.randomUUID();
     }
 
-    @AfterEach
-    void tearDown() {
-        cleaner.cleaner();
-    }
-
+    @DataSet(cleanBefore = true)
     @Test
     void getClients_NotClientExists_shouldReturnOK() throws Exception {
         mockMvc.perform(get("/clients"))
                 .andExpect(status().isOk());
     }
 
+    @DataSet(cleanBefore = true)
     @Test
     void getClient_ClientNotExists_shouldReturnNotFound() throws Exception {
         mockMvc.perform(get("/clients/{clientId}", clientId))
                 .andExpect(status().isNotFound());
     }
 
+    @DataSet(value = "datasets/client.yaml", useSequenceFiltering = false)
     @Test
     void getClient_ClientExists_shouldReturnOK() throws Exception {
-        // Arrange
-        Client client = new Client();
-        client.setMdmCode(88888L);
-        client.setFullName("Иван Иванов");
-
-        Client savedClient = clientRepository.save(client);
-
         // Act
-        mockMvc.perform(get("/clients/{clientId}", savedClient.getId()))
+        mockMvc.perform(get("/clients/{clientId}",
+                        UUID.fromString("11111111-1111-1111-1111-111111111111")))
                 // Assert
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(savedClient.getId().toString()))
+                .andExpect(jsonPath("$.id")
+                        .value("11111111-1111-1111-1111-111111111111"))
                 .andExpect(jsonPath("$.mdmCode").value(88888))
                 .andExpect(jsonPath("$.fullName").value("Иван Иванов"));
     }
 
+    @DataSet(cleanBefore = true)
     @Test
     void createClient_ValidRequest_shouldReturnCreated() throws Exception {
         // Arrange
@@ -94,15 +89,9 @@ public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isCreated());
     }
 
+    @DataSet(value = "datasets/client.yaml", useSequenceFiltering = false)
     @Test
     void createClient_ExistsMdm_shouldReturnConflict() throws Exception {
-        // Arrange
-        Client client = new Client();
-        client.setMdmCode(88888L);
-        client.setFullName("Имя");
-
-        clientRepository.save(client);
-
         ClientCreateRequest request = JsonReaderFromFile.readerJson(
                 "json/mdm-fullname-client.json", ClientCreateRequest.class);
 
@@ -114,6 +103,7 @@ public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isConflict());
     }
 
+    @DataSet(cleanBefore = true)
     @Test
     void createClient_InvalidRequest_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/clients")
@@ -122,20 +112,15 @@ public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @DataSet(value = "datasets/client.yaml", useSequenceFiltering = false)
     @Test
     void updateClient_ClientExists_shouldReturnOK() throws Exception {
-        // Arrange
-        Client client = new Client();
-        client.setMdmCode(88888L);
-        client.setFullName("Старое имя");
-
-        Client savedClient = clientRepository.save(client);
-
         ClientUpdateRequest request = new ClientUpdateRequest();
         request.setFullName("Новое имя");
 
         // Act
-        mockMvc.perform(put("/clients/{clientId}", savedClient.getId())
+        mockMvc.perform(put("/clients/{clientId}",
+                        UUID.fromString("11111111-1111-1111-1111-111111111111"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 // Assert
@@ -143,6 +128,7 @@ public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.fullName").value("Новое имя"));
     }
 
+    @DataSet(cleanBefore = true)
     @Test
     void updateClient_ClientNotExists_shouldReturnNotFound() throws Exception {
         // Arrange
@@ -157,6 +143,7 @@ public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @DataSet(cleanBefore = true)
     @Test
     void updateClient_InvalidRequest_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(put("/clients/{clientId}", clientId)
@@ -165,53 +152,45 @@ public class ClientControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @DataSet(value = "datasets/client.yaml", useSequenceFiltering = false)
     @Test
     void deleteClient_ClientExistsAndNoActiveBill_shouldReturnNoContent() throws Exception {
-        // Arrange
-        Client client = new Client();
-        client.setMdmCode(88888L);
-        client.setFullName("Иван Иванов");
-
-        Client savedClient = clientRepository.save(client);
-
         // Act
-        mockMvc.perform(delete("/clients/{clientId}", savedClient.getId()))
+        mockMvc.perform(delete("/clients/{clientId}",
+                        UUID.fromString("11111111-1111-1111-1111-111111111111")))
                 // Assert
                 .andExpect(status().isNoContent());
 
         // Verify
         Client deletedClient = clientRepository
-                .findById(savedClient.getId())
+                .findById(UUID.fromString("11111111-1111-1111-1111-111111111111"))
                 .orElseThrow();
 
         assertThat(deletedClient.getStatus())
                 .isEqualTo(ClientStatus.DELETED);
     }
 
+    @DataSet(cleanBefore = true)
     @Test
     void deleteClient_ClientNotExists_shouldReturnNotFound() throws Exception {
         mockMvc.perform(delete("/clients/{clientId}", clientId))
                 .andExpect(status().isNotFound());
     }
 
+    @DataSet(value = "datasets/client.yaml", useSequenceFiltering = false)
     @Test
     void checkClientExists_ClientExists_shouldReturnTrue() throws Exception {
-        // Arrange
-        Client client = new Client();
-        client.setMdmCode(88888L);
-        client.setFullName("Иван Иванов");
-
-        Client savedClient = clientRepository.save(client);
-
         // Act
-        mockMvc.perform(get("/clients/{clientId}/exists", savedClient.getId()))
+        mockMvc.perform(get("/clients/{clientId}/exists",
+                        UUID.fromString("11111111-1111-1111-1111-111111111111")))
                 // Assert
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exists").value(true))
                 .andExpect(jsonPath("$.clientId")
-                        .value(savedClient.getId().toString()));
+                        .value("11111111-1111-1111-1111-111111111111"));
     }
 
+    @DataSet(cleanBefore = true)
     @Test
     void checkClientExists_ClientNotExists_shouldReturnFalse() throws Exception {
         mockMvc.perform(get("/clients/{clientId}/exists", clientId))

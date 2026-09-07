@@ -3,7 +3,7 @@ databaseChangeLog:
       id: 5-create-client-bill-table
       author: mikhail
       preConditions:
-        - onFail: HALT
+        - onFail: MARK_RAN
         - not:
             tableExists:
               tableName: client_bill

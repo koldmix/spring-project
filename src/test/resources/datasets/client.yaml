@@ -1,0 +1,5 @@
+client:
+  - id: "11111111-1111-1111-1111-111111111111"
+    mdm_code: 88888
+    full_name: "Иван Иванов"
+    status: ACTIVE
