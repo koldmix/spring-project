@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: Client Management API (Account Reservation)
+  description: REST API для клиентов
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+paths:
+  /clients:
+    post:
+      summary: Создание нового клиента
+      operationId: createClient
+      tags:
+        - Clients
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+      responses:
+        '201':
+          description: Клиент успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Невалидные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфликт - клиент с таким mdmCode уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: Получение клиентов с пагинацией
+      operationId: searchClients
+      tags:
+        - Clients
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: fullName
+          in: query
+          description: Фильтр по полному имени
+          schema:
+            type: string
+        - name: mdmCode
+          in: query
+          description: Фильтр по MDM коду
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный поиск
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientPageResponse'
+
+  /clients/{clientId}:
+    get:
+      summary: Получение клиента по ID
+      operationId: getClient
+      tags:
+        - Clients
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Обновление клиента
+      operationId: updateClient
+      tags:
+        - Clients
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientUpdateRequest'
+      responses:
+        '200':
+          description: Успешно обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Невалидные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Удаление клиента (soft delete)
+      operationId: deleteClient
+      tags:
+        - Clients
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Успешно удалено
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфликт - у клиента есть активные счета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /clients/{clientId}/exists:
+    get:
+      summary: Проверка существования клиента
+      operationId: checkClientExists
+      tags:
+        - Clients
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientExistsResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ClientStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - BLOCKED
+        - DELETED
+
+    ClientCreateRequest:
+      type: object
+      required:
+        - mdmCode
+        - fullName
+      properties:
+        mdmCode:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        citizenship:
+          type: string
+        clientType:
+          type: string
+        documentNumber:
+          type: string
+        documentSeries:
+          type: string
+        documentType:
+          type: string
+
+    ClientUpdateRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        citizenship:
+          type: string
+        clientType:
+          type: string
+        documentNumber:
+          type: string
+        documentSeries:
+          type: string
+        documentType:
+          type: string
+
+    ClientResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        mdmCode:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        citizenship:
+          type: string
+        clientType:
+          type: string
+        documentNumber:
+          type: string
+        documentSeries:
+          type: string
+        documentType:
+          type: string
+        status:
+          $ref: '#/components/schemas/ClientStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        hasAccounts:
+          type: boolean
+          description: "Вычисляемое поле: проверяет наличие связанных Account"
+
+    ClientPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientResponse'
+        pageable:
+          $ref: '#/components/schemas/PageableObject'
+
+    PageableObject:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    ClientExistsResponse:
+      type: object
+      properties:
+        exists:
+          type: boolean
+        clientId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ClientStatus'
+
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        errorDescription:
+          type: string
+        statusCode:
+          type: integer
