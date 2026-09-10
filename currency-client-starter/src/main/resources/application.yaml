@@ -1,0 +1,3 @@
+app:
+  currency-client:
+    base-url: https://api.frankfurter.dev
