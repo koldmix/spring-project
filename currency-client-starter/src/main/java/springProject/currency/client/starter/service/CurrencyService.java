@@ -1,29 +1,21 @@
 package springProject.currency.client.starter.service;
 
-import org.springframework.web.client.RestTemplate;
-import springProject.currency.client.starter.config.CurrencyClientProperties;
+import lombok.RequiredArgsConstructor;
+import springProject.currency.client.starter.client.ExchangeRateClient;
 import springProject.currency.client.starter.dto.ExchangeRate;
 
 import java.math.BigDecimal;
 
+@RequiredArgsConstructor
 public class CurrencyService {
-    private final RestTemplate restTemplate;
-    private final CurrencyClientProperties properties;
-
-    public CurrencyService(RestTemplate restTemplate, CurrencyClientProperties properties) {
-        this.restTemplate = restTemplate;
-        this.properties = properties;
-    }
+    private final ExchangeRateClient exchangeRateClient;
 
     public BigDecimal getExchangeRate(String fromCurrency, String toCurrency){
-        String url = properties.getBaseUrl()
-                + "/v2/rate/"
-                + fromCurrency
-                + "/"
-                + toCurrency;
+        if (fromCurrency.equalsIgnoreCase(toCurrency)) {
+            return BigDecimal.ONE;
+        }
 
-        ExchangeRate response =
-                restTemplate.getForObject(url, ExchangeRate.class);
+        ExchangeRate response = exchangeRateClient.getExchangeRate(fromCurrency, toCurrency);
 
         return response.getRate();
     }
