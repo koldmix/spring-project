@@ -23,18 +23,11 @@ public class CurrencyClientResilienceConfiguration {
 
     @Bean
     public RateLimiter currencyClientRateLimiter(
-            CurrencyClientProperties properties
-    ) {
+            CurrencyClientProperties properties) {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .limitForPeriod(
-                        properties.getRateLimiter().getLimitForPeriod()
-                )
-                .limitRefreshPeriod(
-                        properties.getRateLimiter().getLimitRefreshPeriod()
-                )
-                .timeoutDuration(
-                        properties.getRateLimiter().getTimeoutDuration()
-                )
+                .limitForPeriod(properties.getRateLimiter().getLimitForPeriod())
+                .limitRefreshPeriod(properties.getRateLimiter().getLimitRefreshPeriod())
+                .timeoutDuration(properties.getRateLimiter().getTimeoutDuration())
                 .build();
 
         return RateLimiter.of("currencyClient", config);
@@ -42,14 +35,12 @@ public class CurrencyClientResilienceConfiguration {
 
     @Bean
     public Request.Options currencyClientRequestOptions(
-            CurrencyClientProperties properties
-    ) {
+            CurrencyClientProperties properties) {
         return new Request.Options(
                 properties.getTimeout().getConnectTimeout().toMillis(),
                 TimeUnit.MILLISECONDS,
                 properties.getTimeout().getReadTimeout().toMillis(),
                 TimeUnit.MILLISECONDS,
-                true
-        );
+                true);
     }
 }
