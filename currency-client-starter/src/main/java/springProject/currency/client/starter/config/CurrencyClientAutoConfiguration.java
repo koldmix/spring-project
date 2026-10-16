@@ -1,5 +1,6 @@
 package springProject.currency.client.starter.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.Import;
 import springProject.currency.client.starter.client.ExchangeRateClient;
 import springProject.currency.client.starter.health.HttpHealthIndicator;
 import springProject.currency.client.starter.service.CurrencyService;
+import org.springframework.context.annotation.Import;
 
 @ConditionalOnProperty(
         prefix = "currency-client-starter",
@@ -18,12 +20,14 @@ import springProject.currency.client.starter.service.CurrencyService;
 @AutoConfiguration
 @EnableConfigurationProperties(CurrencyClientProperties.class)
 @EnableFeignClients(clients = ExchangeRateClient.class)
-@Import(CurrencyClientResilienceConfiguration.class)
+@Import({CurrencyClientResilienceConfiguration.class,
+        CurrencyCacheConfiguration.class})
 public class CurrencyClientAutoConfiguration {
 
     @Bean
-    public CurrencyService currencyService(ExchangeRateClient exchangeRateClient) {
-        return new CurrencyService(exchangeRateClient);
+    public CurrencyService currencyService(ExchangeRateClient exchangeRateClient,
+                                           MeterRegistry meterRegistry) {
+        return new CurrencyService(exchangeRateClient, meterRegistry);
     }
 
     @Bean

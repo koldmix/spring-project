@@ -2,12 +2,15 @@ package springProject.currency.client.starter.config;
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.retry.Retry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import springProject.currency.client.starter.client.ExchangeRateClient;
 import springProject.currency.client.starter.service.CurrencyService;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 
 import java.time.Duration;
 
@@ -16,7 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CurrencyClientAutoConfigurationTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(CurrencyClientAutoConfiguration.class,
-                    FeignAutoConfiguration.class))
+                    FeignAutoConfiguration.class,
+                    RedisAutoConfiguration.class))
             .withPropertyValues("currency-client-starter.enabled=true",
                     "currency-client-starter.health.enabled=true",
                     "app.currency-client.base-url=https://api.frankfurter.dev",
@@ -26,7 +30,8 @@ public class CurrencyClientAutoConfigurationTest {
                     "app.currency-client.timeout.read-timeout=5s",
                     "app.currency-client.rate-limiter.limit-for-period=10",
                     "app.currency-client.rate-limiter.limit-refresh-period=1s",
-                    "app.currency-client.rate-limiter.timeout-duration=100ms");
+                    "app.currency-client.rate-limiter.timeout-duration=100ms")
+            .withBean(SimpleMeterRegistry.class, SimpleMeterRegistry::new);
 
     @Test
     void shouldCreateCurrencyService() {
