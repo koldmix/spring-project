@@ -22,7 +22,6 @@ import org.testcontainers.utility.DockerImageName;
 import springProject.currency.client.starter.client.ExchangeRateClient;
 import springProject.currency.client.starter.config.CurrencyCacheConfiguration;
 import springProject.currency.client.starter.dto.ExchangeRate;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -68,6 +67,11 @@ class CurrencyServiceRedisCacheTest {
         @Bean
         SimpleMeterRegistry simpleMeterRegistry() {
             return new SimpleMeterRegistry();
+        }
+
+        @Bean
+        MetricsService metricsService(SimpleMeterRegistry meterRegistry) {
+            return new MetricsService(meterRegistry);
         }
     }
 

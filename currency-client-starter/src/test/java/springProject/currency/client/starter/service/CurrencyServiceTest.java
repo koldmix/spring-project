@@ -26,7 +26,8 @@ class CurrencyServiceTest {
         response.setRate(new BigDecimal("0.85"));
         when(exchangeRateClient.getExchangeRate("USD", "EUR"))
                 .thenReturn(response);
-        CurrencyService currencyService = new CurrencyService(exchangeRateClient, new SimpleMeterRegistry());
+        CurrencyService currencyService = new CurrencyService(exchangeRateClient,
+                new MetricsService(new SimpleMeterRegistry()));
         // Act
         BigDecimal result = currencyService.getExchangeRate("USD", "EUR");
         // Assert
@@ -77,7 +78,8 @@ class CurrencyServiceTest {
     void getExchangeRate_SameCurrencies_shouldReturnOneWithoutClientCall() {
         ExchangeRateClient exchangeRateClient = mock(ExchangeRateClient.class);
 
-        CurrencyService currencyService = new CurrencyService(exchangeRateClient, new SimpleMeterRegistry());
+        CurrencyService currencyService = new CurrencyService(exchangeRateClient,
+                new MetricsService(new SimpleMeterRegistry()));
 
         BigDecimal result = currencyService.getExchangeRate("USD", "USD");
 
@@ -97,11 +99,12 @@ class CurrencyServiceTest {
         when(client.getExchangeRate("USD", "EUR"))
                 .thenReturn(response);
 
-        CurrencyService service = new CurrencyService(client, registry);
+        MetricsService metricsService = new MetricsService(registry);
+        CurrencyService service = new CurrencyService(client, metricsService);
 
         service.getExchangeRate("USD", "EUR");
 
-        assertEquals(1.0, registry.counter("currency.exchange.rate.requests")
+        assertEquals(1.0, registry.counter(MetricsService.CURRENCY_EXCHANGE_RATE_REQUESTS)
                         .count());
 
         verify(client).getExchangeRate("USD", "EUR");

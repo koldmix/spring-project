@@ -2,6 +2,9 @@ app:
   currency-client:
     base-url: https://api.frankfurter.dev
 
+    cache:
+      entry-ttl: 30m
+
     currency-client-starter:
       enabled: true
       health:
