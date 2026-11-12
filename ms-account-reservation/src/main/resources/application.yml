@@ -8,12 +8,17 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      connect-timeout: 2s
 
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, loggers
+        include: health, info, metrics, loggers, prometheus
         exclude: env, shutdown
   endpoint:
     health:

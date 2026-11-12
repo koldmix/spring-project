@@ -6,6 +6,7 @@ import org.springframework.boot.actuate.health.Status;
 import springProject.currency.client.starter.client.ExchangeRateClient;
 import springProject.currency.client.starter.dto.ExchangeRate;
 import springProject.currency.client.starter.health.HttpHealthIndicator;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import java.math.BigDecimal;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +26,8 @@ class CurrencyServiceTest {
         response.setRate(new BigDecimal("0.85"));
         when(exchangeRateClient.getExchangeRate("USD", "EUR"))
                 .thenReturn(response);
-        CurrencyService currencyService = new CurrencyService(exchangeRateClient);
+        CurrencyService currencyService = new CurrencyService(exchangeRateClient,
+                new MetricsService(new SimpleMeterRegistry()));
         // Act
         BigDecimal result = currencyService.getExchangeRate("USD", "EUR");
         // Assert
@@ -76,12 +78,35 @@ class CurrencyServiceTest {
     void getExchangeRate_SameCurrencies_shouldReturnOneWithoutClientCall() {
         ExchangeRateClient exchangeRateClient = mock(ExchangeRateClient.class);
 
-        CurrencyService currencyService = new CurrencyService(exchangeRateClient);
+        CurrencyService currencyService = new CurrencyService(exchangeRateClient,
+                new MetricsService(new SimpleMeterRegistry()));
 
         BigDecimal result = currencyService.getExchangeRate("USD", "USD");
 
         assertEquals(BigDecimal.ONE, result);
 
         verifyNoInteractions(exchangeRateClient);
+    }
+
+    @Test
+    void getExchangeRate_ShouldIncrementExternalApiCounter() {
+        ExchangeRateClient client = mock(ExchangeRateClient.class);
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+
+        ExchangeRate response = new ExchangeRate();
+        response.setRate(new BigDecimal("0.85"));
+
+        when(client.getExchangeRate("USD", "EUR"))
+                .thenReturn(response);
+
+        MetricsService metricsService = new MetricsService(registry);
+        CurrencyService service = new CurrencyService(client, metricsService);
+
+        service.getExchangeRate("USD", "EUR");
+
+        assertEquals(1.0, registry.counter(MetricsService.CURRENCY_EXCHANGE_RATE_REQUESTS)
+                        .count());
+
+        verify(client).getExchangeRate("USD", "EUR");
     }
 }

@@ -1,6 +1,8 @@
 package springProject.currency.client.starter.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -9,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import springProject.currency.client.starter.client.ExchangeRateClient;
 import springProject.currency.client.starter.health.HttpHealthIndicator;
 import springProject.currency.client.starter.service.CurrencyService;
+import springProject.currency.client.starter.service.MetricsService;
 
 @ConditionalOnProperty(
         prefix = "currency-client-starter",
@@ -16,14 +19,22 @@ import springProject.currency.client.starter.service.CurrencyService;
         havingValue = "true"
 )
 @AutoConfiguration
-@EnableConfigurationProperties(CurrencyClientProperties.class)
+@EnableConfigurationProperties({CurrencyClientProperties.class, CacheProperties.class})
 @EnableFeignClients(clients = ExchangeRateClient.class)
-@Import(CurrencyClientResilienceConfiguration.class)
+@Import({CurrencyClientResilienceConfiguration.class,
+        CurrencyCacheConfiguration.class})
 public class CurrencyClientAutoConfiguration {
 
     @Bean
-    public CurrencyService currencyService(ExchangeRateClient exchangeRateClient) {
-        return new CurrencyService(exchangeRateClient);
+    @ConditionalOnMissingBean
+    public MetricsService metricsService(MeterRegistry meterRegistry) {
+        return new MetricsService(meterRegistry);
+    }
+
+    @Bean
+    public CurrencyService currencyService(ExchangeRateClient exchangeRateClient,
+                                           MetricsService metricsService) {
+        return new CurrencyService(exchangeRateClient, metricsService);
     }
 
     @Bean
